@@ -28,6 +28,8 @@ public class FlyingEnemy : EnemyBase
         base.Setup();
         waypointMover = GetComponent<WaypointMover>();
         spriteRenderer = GetComponent<SpriteRenderer>();
+
+        canShoot = true;
     }
 
     /// <summary>
@@ -41,8 +43,24 @@ public class FlyingEnemy : EnemyBase
     /// </summary>
     protected override void Update()
     {
-        CheckFlipSprite();
         SetStateInformation();
+
+        distToPlayer = Vector2.Distance(transform.position, player.position);
+
+
+            if (distToPlayer <= range)
+        {
+            if (player.position.x > transform.position.x && transform.localScale.x < 0
+                || player.position.x < transform.position.x && transform.localScale.x > 0)
+            {
+                CheckFlipSprite();
+            }
+
+            if (canShoot == true)
+            {
+                StartCoroutine(Shoot());
+            }
+        }
     }
 
     /// <summary>
@@ -86,5 +104,24 @@ public class FlyingEnemy : EnemyBase
         {
             enemyState = EnemyState.Idle;
         }
+    }
+
+    public Transform player, shootPos;
+    public float walkSpeed, range, timeBTWShots, shootSpeed;
+    private float distToPlayer;
+    private bool canShoot;
+
+    public GameObject bullet;
+
+    IEnumerator Shoot()
+    {
+        canShoot = false;
+
+        yield return new WaitForSeconds(timeBTWShots);
+        GameObject newBullet = Instantiate(bullet, shootPos.position, Quaternion.identity);
+
+        newBullet.GetComponent<Rigidbody2D>().velocity = new Vector2(shootSpeed * walkSpeed * Time.fixedDeltaTime, 0);
+        canShoot = true;
+
     }
 }
